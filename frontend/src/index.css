@@ -1,9 +1,58 @@
 @import "tailwindcss";
 
 @layer base {
+  :root {
+    --bg-page: #f0f7ff;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --holo-sheen: rgba(255, 255, 255, 0.85);
+  }
+
+  html.dark {
+    --bg-page: #030712;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --holo-sheen: rgba(255, 255, 255, 0.12);
+  }
+
   body {
-    @apply bg-slate-950 text-slate-100 min-h-screen antialiased selection:bg-cyan-500 selection:text-white;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    min-height: 100vh;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    transition: background-color 0.4s ease, color 0.4s ease;
+    overflow-x: hidden;
+  }
+}
+
+/* Holomorphic Iridescent Shimmer & Gradient Flow */
+@keyframes holoShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translateY(-20px) rotate(4deg) scale(1.05);
+  }
+}
+
+@keyframes holoSheenPass {
+  0% {
+    transform: translateX(-150%) skewX(-25deg);
+  }
+  100% {
+    transform: translateX(250%) skewX(-25deg);
   }
 }
 
@@ -51,7 +100,7 @@
     box-shadow: 0 0 25px rgba(6, 182, 212, 0.4);
   }
   50% {
-    box-shadow: 0 0 45px rgba(59, 130, 246, 0.7);
+    box-shadow: 0 0 45px rgba(168, 85, 247, 0.6);
   }
 }
 
@@ -63,14 +112,89 @@
   animation: waveSecondaryAnimation 11s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite;
 }
 
+.animate-holo-bg {
+  background-size: 300% 300%;
+  animation: holoShift 12s ease infinite;
+}
+
+.animate-float-slow {
+  animation: floatSlow 8s ease-in-out infinite;
+}
+
 .animate-pulse-glow {
   animation: pulseGlow 3s ease-in-out infinite;
 }
 
 .bubble {
   position: absolute;
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.4);
   border-radius: 50%;
   pointer-events: none;
   animation: floatBubble 5s ease-in infinite;
+}
+
+/* Glassmorphism & Holomorphism Component Classes */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+.dark .glass-panel {
+  background: rgba(15, 23, 42, 0.68);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Holomorphic Card with Prismatic Iridescent Border */
+.holo-border {
+  position: relative;
+  background-clip: padding-box;
+}
+
+.holo-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc, #f472b6, #34d399, #38bdf8);
+  background-size: 300% 300%;
+  animation: holoShift 8s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Interactive Holo Sheen on Buttons/Cards */
+.holo-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.holo-shine::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 60%
+  );
+  transform: translateX(-150%) skewX(-25deg);
+  transition: transform 0.8s ease;
+  pointer-events: none;
+}
+
+.holo-shine:hover::after {
+  transform: translateX(150%) skewX(-25deg);
 }

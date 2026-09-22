@@ -11,33 +11,33 @@ export default function HistoryDrawer({ prxHistory, sharzzHistory }) {
     : [];
 
   return (
-    <div className="w-full bg-slate-900/80 backdrop-blur-md rounded-3xl border border-slate-800 p-4 shadow-md">
+    <div className="w-full glass-panel rounded-3xl p-4 transition-all duration-300">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between text-left cursor-pointer group"
       >
         <div className="flex items-center gap-2">
-          <History className="w-4 h-4 text-cyan-400 group-hover:rotate-12 transition-transform" />
-          <h5 className="font-bold text-xs text-slate-200 uppercase tracking-wider">
+          <History className="w-4 h-4 text-cyan-500 dark:text-cyan-400 group-hover:rotate-12 transition-transform" />
+          <h5 className="font-extrabold text-xs text-slate-700 dark:text-slate-200 uppercase tracking-wider">
             Today's Sip Timeline & Logs
           </h5>
         </div>
-        <div className="flex items-center gap-2 text-xs text-slate-400">
+        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
           <span>{isOpen ? 'Hide Timeline' : 'View Timeline'}</span>
           {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </div>
       </button>
 
       {isOpen && (
-        <div className="mt-4 pt-3 border-t border-slate-800">
+        <div className="mt-4 pt-3 border-t border-slate-200/80 dark:border-slate-800">
           {/* User selector tab */}
           <div className="flex gap-2 mb-3">
             <button
               onClick={() => setSelectedUser('prx')}
               className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedUser === 'prx'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
+                  ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-300 border border-cyan-400/40 shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               🌊 Prx's Logs ({historyList.length})
@@ -46,8 +46,8 @@ export default function HistoryDrawer({ prxHistory, sharzzHistory }) {
               onClick={() => setSelectedUser('sharzz')}
               className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedUser === 'sharzz'
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
+                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-400/40 shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               🌿 Sharzz's Logs ({Object.keys(sharzzHistory || {}).length})
@@ -56,7 +56,7 @@ export default function HistoryDrawer({ prxHistory, sharzzHistory }) {
 
           {/* List of logs */}
           {historyList.length === 0 ? (
-            <p className="text-center text-xs text-slate-500 py-4 italic">
+            <p className="text-center text-xs text-slate-400 dark:text-slate-500 py-4 italic">
               No sips recorded yet today. Take a drink and log it above! 💧
             </p>
           ) : (
@@ -64,17 +64,17 @@ export default function HistoryDrawer({ prxHistory, sharzzHistory }) {
               {historyList.map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 text-xs"
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-white/60 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 text-xs shadow-sm"
                 >
-                  <div className="flex items-center gap-2 text-slate-300">
-                    <Droplet className="w-3.5 h-3.5 text-cyan-400" />
+                  <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                    <Droplet className="w-3.5 h-3.5 text-cyan-500 dark:text-cyan-400" />
                     <span>Hydrated</span>
-                    <span className="font-bold text-white bg-slate-800 px-2 py-0.5 rounded">
+                    <span className="font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
                       +{item.amount} ml
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 text-slate-400 text-[11px]">
-                    <Clock className="w-3 h-3 text-slate-500" />
+                  <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-[11px]">
+                    <Clock className="w-3 h-3 text-slate-400" />
                     <span>{item.time}</span>
                   </div>
                 </div>

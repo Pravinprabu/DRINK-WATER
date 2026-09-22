@@ -6,15 +6,16 @@ import {
   checkDailyReset,
   setupMidnightTimer
 } from './firebase';
-import { getRandomMotivationalGif } from './data/motivationalGifs';
+import { getRandomMotivationalGif, getRandomSlackingGif } from './data/motivationalGifs';
 import Header from './components/Header';
 import BottleCard from './components/BottleCard';
 import LogControls from './components/LogControls';
 import NudgeBar from './components/NudgeBar';
 import CelebrationModal from './components/CelebrationModal';
+import SlackingModal from './components/SlackingModal';
 import IdentityModal from './components/IdentityModal';
 import HistoryDrawer from './components/HistoryDrawer';
-import { Sparkles, Trophy, HeartHandshake, RefreshCw, Lock } from 'lucide-react';
+import { Sparkles, HeartHandshake, Skull } from 'lucide-react';
 
 // Web Audio synthesizer for crisp water drop & celebration sounds
 function playSound(type = 'drop') {
@@ -47,6 +48,15 @@ function playSound(type = 'drop') {
         o.start(now + i * 0.1);
         o.stop(now + i * 0.1 + 0.3);
       });
+    } else if (type === 'warn') {
+      const now = ctx.currentTime;
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(200, now);
+      osc.frequency.linearRampToValueAtTime(120, now + 0.25);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+      osc.start(now);
+      osc.stop(now + 0.25);
     }
   } catch (e) {
     // AudioContext blocked or unsupported
@@ -54,6 +64,11 @@ function playSound(type = 'drop') {
 }
 
 export default function App() {
+  // Theme state: dark / light
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('hydration_theme') || 'dark';
+  });
+
   // Session storage ensures secret PIN (0412 / 0808) is entered whenever opening the site
   const [currentUser, setCurrentUser] = useState(() => {
     return sessionStorage.getItem('prx_sharzz_user') || null;
@@ -62,10 +77,27 @@ export default function App() {
   const [mobileActiveTab, setMobileActiveTab] = useState('prx');
   const [duoData, setDuoData] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [celebrationState, setCelebrationState] = useState(null); // { user, gif, intake }
+  const [celebrationState, setCelebrationState] = useState(null);
+  const [slackingState, setSlackingState] = useState(null);
   const [celebratedUsers, setCelebratedUsers] = useState(new Set());
 
   const previousIntakesRef = useRef({ prx: 0, sharzz: 0 });
+
+  // Manage Dark/Light theme class on <html>
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+    }
+    localStorage.setItem('hydration_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
 
   // 1. Subscribe to Firebase Realtime Database & schedule 12:00 AM reset
   useEffect(() => {
@@ -112,6 +144,16 @@ export default function App() {
     });
   };
 
+  const triggerSlackingModal = (userName, intake) => {
+    const gif = getRandomSlackingGif();
+    playSound('warn');
+    setSlackingState({
+      userName,
+      gifData: gif,
+      intake
+    });
+  };
+
   const handleSelectUser = (userKey) => {
     setCurrentUser(userKey);
     setMobileActiveTab(userKey);
@@ -145,11 +187,18 @@ export default function App() {
 
   const otherUser = currentUser === 'prx' ? 'sharzz' : 'prx';
   const otherUserName = otherUser === 'prx' ? 'Prx' : 'Sharzz';
-  const currentUserName = currentUser === 'prx' ? 'Prx' : 'Sharzz';
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100 flex flex-col">
-      {/* 1. Identity Selection Modal for first-time visitors */}
+    <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-400">
+      {/* Ambient Holomorphic Light Blobs in Background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-cyan-400/20 dark:bg-cyan-500/10 blur-3xl animate-float-slow" />
+        <div className="absolute top-1/3 -right-32 w-96 h-96 rounded-full bg-indigo-400/20 dark:bg-purple-500/10 blur-3xl animate-float-slow [animation-delay:3s]" />
+        <div className="absolute -bottom-32 left-1/4 w-96 h-96 rounded-full bg-pink-400/20 dark:bg-pink-500/10 blur-3xl animate-float-slow [animation-delay:5s]" />
+        <div className="absolute top-2/3 right-1/4 w-80 h-80 rounded-full bg-emerald-400/20 dark:bg-emerald-500/10 blur-3xl animate-float-slow [animation-delay:2s]" />
+      </div>
+
+      {/* 1. Identity Selection Modal with Secret PIN */}
       {!currentUser && (
         <IdentityModal onSelectUser={handleSelectUser} />
       )}
@@ -164,30 +213,44 @@ export default function App() {
         />
       )}
 
-      {/* 3. Header with live status and duo stats */}
+      {/* 3. Incomplete Task / Dehydration Roast Modal */}
+      {slackingState && (
+        <SlackingModal
+          userName={slackingState.userName}
+          gifData={slackingState.gifData}
+          intakeMl={slackingState.intake}
+          targetMl={3500}
+          onQuickHydrate={currentUser ? handleLogWater : null}
+          onClose={() => setSlackingState(null)}
+        />
+      )}
+
+      {/* 4. Header with live status, duo stats & theme toggle */}
       <Header
         currentUser={currentUser}
         prxData={prxData}
         sharzzData={sharzzData}
         onSwitchUser={handleLockAndSwitch}
         isConnected={isConnected}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-6 sm:px-6 flex flex-col gap-6">
+      <main className="relative z-10 flex-1 max-w-6xl w-full mx-auto px-4 py-6 sm:px-6 flex flex-col gap-6">
         
         {/* Mobile View Switcher (Comfortable tab navigation for phones) */}
-        <div className="flex md:hidden bg-slate-900/90 border border-slate-800 rounded-2xl p-1.5 shadow-md">
+        <div className="flex md:hidden glass-panel rounded-2xl p-1.5 shadow-md">
           <button
             onClick={() => setMobileActiveTab('prx')}
             className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer flex items-center justify-center gap-2 ${
               mobileActiveTab === 'prx'
-                ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
             <span>🌊 Prx's Station</span>
-            <span className="text-xs bg-slate-950/60 px-2 py-0.5 rounded-full">
+            <span className="text-xs bg-white/20 dark:bg-slate-950/60 px-2 py-0.5 rounded-full">
               {Math.round(((prxData.todayIntake || 0) / 3500) * 100)}%
             </span>
           </button>
@@ -196,12 +259,12 @@ export default function App() {
             onClick={() => setMobileActiveTab('sharzz')}
             className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer flex items-center justify-center gap-2 ${
               mobileActiveTab === 'sharzz'
-                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
             <span>🌿 Sharzz's Station</span>
-            <span className="text-xs bg-slate-950/60 px-2 py-0.5 rounded-full">
+            <span className="text-xs bg-white/20 dark:bg-slate-950/60 px-2 py-0.5 rounded-full">
               {Math.round(((sharzzData.todayIntake || 0) / 3500) * 100)}%
             </span>
           </button>
@@ -229,14 +292,23 @@ export default function App() {
                 isCurrentUser={true}
               />
             )}
-            {/* Manual test/replay celebration button if over 3.5L */}
-            {prxData.todayIntake >= 3500 && (
+            {/* If over 3.5L: show Celebration GIF */}
+            {prxData.todayIntake >= 3500 ? (
               <button
                 onClick={() => triggerCelebration('Prx', prxData.todayIntake)}
-                className="w-full py-2.5 px-4 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
+                className="w-full py-2.5 px-4 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-700 dark:text-amber-300 font-extrabold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md holo-shine"
               >
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-4 h-4 text-amber-500" />
                 <span>Show Prx's Cute Motivation GIF Celebration 💖</span>
+              </button>
+            ) : (
+              /* If below 3.5L: show Incomplete / Slacking Roast GIF */
+              <button
+                onClick={() => triggerSlackingModal('Prx', prxData.todayIntake)}
+                className="w-full py-2.5 px-4 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-400/30 text-rose-700 dark:text-rose-300 font-extrabold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm holo-shine"
+              >
+                <Skull className="w-4 h-4 text-rose-500" />
+                <span>Prx Incomplete Task? See Roast GIF 🌵💀</span>
               </button>
             )}
           </div>
@@ -259,14 +331,23 @@ export default function App() {
                 isCurrentUser={true}
               />
             )}
-            {/* Manual test/replay celebration button if over 3.5L */}
-            {sharzzData.todayIntake >= 3500 && (
+            {/* If over 3.5L: show Celebration GIF */}
+            {sharzzData.todayIntake >= 3500 ? (
               <button
                 onClick={() => triggerCelebration('Sharzz', sharzzData.todayIntake)}
-                className="w-full py-2.5 px-4 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
+                className="w-full py-2.5 px-4 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-700 dark:text-amber-300 font-extrabold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md holo-shine"
               >
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-4 h-4 text-amber-500" />
                 <span>Show Sharzz's Cute Motivation GIF Celebration 💖</span>
+              </button>
+            ) : (
+              /* If below 3.5L: show Incomplete / Slacking Roast GIF */
+              <button
+                onClick={() => triggerSlackingModal('Sharzz', sharzzData.todayIntake)}
+                className="w-full py-2.5 px-4 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-400/30 text-rose-700 dark:text-rose-300 font-extrabold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm holo-shine"
+              >
+                <Skull className="w-4 h-4 text-rose-500" />
+                <span>Sharzz Incomplete Task? See Roast GIF 🌵💀</span>
               </button>
             )}
           </div>
@@ -280,6 +361,7 @@ export default function App() {
             targetName={otherUserName}
             onSendNudge={handleSendNudge}
             lastNudge={lastNudge}
+            onOpenSlackingModal={() => triggerSlackingModal(otherUserName, otherUser === 'prx' ? prxData.todayIntake : sharzzData.todayIntake)}
           />
         )}
 
@@ -290,9 +372,9 @@ export default function App() {
         />
 
         {/* Wholesome Motivational Quote Footer */}
-        <footer className="mt-auto py-4 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-center gap-2">
-          <span className="flex items-center gap-1">
-            <HeartHandshake className="w-4 h-4 text-rose-400" />
+        <footer className="mt-auto py-4 text-center text-xs text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row items-center justify-center gap-2">
+          <span className="flex items-center gap-1.5 font-medium">
+            <HeartHandshake className="w-4 h-4 text-rose-500" />
             Built with care for Prx & Sharzz
           </span>
           <span className="hidden sm:inline">•</span>

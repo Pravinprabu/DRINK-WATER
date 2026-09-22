@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BellRing, Send, Sparkles, AlertCircle } from 'lucide-react';
+import { BellRing, Skull } from 'lucide-react';
 
 const NUDGE_OPTIONS = [
   {
@@ -10,9 +10,9 @@ const NUDGE_OPTIONS = [
   },
   {
     type: 'cactus',
-    icon: '🌵',
-    label: 'Cactus Alert',
-    text: 'says: "Bro, are you turning into a cactus? Go drink water!"'
+    icon: '🌵💀',
+    label: 'Cactus Roast',
+    text: 'says: "Bro, are you turning into a cactus?! Drink water!"'
   },
   {
     type: 'ice',
@@ -33,7 +33,8 @@ export default function NudgeBar({
   targetUserId,
   targetName,
   onSendNudge,
-  lastNudge
+  lastNudge,
+  onOpenSlackingModal
 }) {
   const [justSent, setJustSent] = useState(false);
 
@@ -51,33 +52,44 @@ export default function NudgeBar({
     <div className="w-full space-y-3">
       {/* Live Nudge Alert Banner for incoming notifications */}
       {isNudgeForMe && isRecentNudge && (
-        <div className="bg-gradient-to-r from-cyan-950 via-blue-950 to-indigo-950 border-2 border-cyan-400/60 rounded-2xl p-4 shadow-xl shadow-cyan-500/20 flex items-center justify-between animate-bounce">
+        <div className="bg-gradient-to-r from-cyan-500/20 via-indigo-500/20 to-pink-500/20 backdrop-blur-xl border-2 border-cyan-400/60 rounded-2xl p-4 shadow-xl shadow-cyan-500/20 flex flex-col sm:flex-row items-center justify-between gap-3 animate-bounce">
           <div className="flex items-center gap-3">
             <span className="text-3xl">{lastNudge.icon}</span>
             <div>
-              <p className="text-sm font-bold text-white">
+              <p className="text-sm font-bold text-slate-900 dark:text-white">
                 {lastNudge.from === 'prx' ? 'Prx' : 'Sharzz'} {lastNudge.text}
               </p>
-              <span className="text-[11px] text-cyan-300">Just now • Go take a sip!</span>
+              <span className="text-[11px] text-cyan-600 dark:text-cyan-300 font-medium">Just now • Go take a sip!</span>
             </div>
           </div>
-          <span className="text-xs bg-cyan-500/20 text-cyan-300 px-3 py-1 rounded-full border border-cyan-400/40 font-semibold">
-            💧 Hydrate!
-          </span>
+          <div className="flex items-center gap-2">
+            {lastNudge.type === 'cactus' && onOpenSlackingModal && (
+              <button
+                onClick={onOpenSlackingModal}
+                className="text-xs bg-rose-500/20 hover:bg-rose-500/30 text-rose-700 dark:text-rose-300 px-3 py-1.5 rounded-full border border-rose-400/50 font-bold shadow-sm flex items-center gap-1 cursor-pointer transition-all"
+              >
+                <Skull className="w-3.5 h-3.5 text-rose-500" />
+                <span>See Roast GIF</span>
+              </button>
+            )}
+            <span className="text-xs bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 px-3 py-1.5 rounded-full border border-cyan-400/40 font-bold shadow-sm">
+              💧 Hydrate!
+            </span>
+          </div>
         </div>
       )}
 
       {/* Send Cousin Nudges */}
-      <div className="bg-slate-900/80 backdrop-blur-md rounded-3xl p-4 border border-slate-800 shadow-md">
+      <div className="glass-panel rounded-3xl p-4 transition-all duration-300">
         <div className="flex items-center justify-between mb-3 px-1">
           <div className="flex items-center gap-2">
-            <BellRing className="w-4 h-4 text-amber-400" />
-            <h5 className="font-bold text-xs text-slate-200 uppercase tracking-wider">
+            <BellRing className="w-4 h-4 text-amber-500" />
+            <h5 className="font-extrabold text-xs text-slate-700 dark:text-slate-200 uppercase tracking-wider">
               Nudge {targetName} to Drink
             </h5>
           </div>
           {justSent && (
-            <span className="text-xs font-semibold text-emerald-400 animate-pulse">
+            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 animate-pulse">
               Sent to {targetName}! 💦
             </span>
           )}
@@ -89,7 +101,7 @@ export default function NudgeBar({
               key={opt.type}
               onClick={() => handleNudgeClick(opt)}
               disabled={justSent}
-              className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/40 text-slate-300 hover:text-white transition-all cursor-pointer text-left active:scale-95 disabled:opacity-50"
+              className="flex items-center gap-2 p-2.5 rounded-xl bg-white/70 dark:bg-slate-800/80 hover:bg-cyan-50 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 hover:border-cyan-400 text-slate-700 dark:text-slate-200 transition-all cursor-pointer text-left active:scale-95 disabled:opacity-50 holo-shine shadow-sm"
             >
               <span className="text-lg">{opt.icon}</span>
               <div className="leading-tight">
