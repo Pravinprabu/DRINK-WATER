@@ -181,8 +181,8 @@ export default function App() {
     await sendNudge(fromUser, toUser, nudge);
   };
 
-  const prxData = duoData?.users?.prx || { todayIntake: 0, target: 3500, streak: 1 };
-  const sharzzData = duoData?.users?.sharzz || { todayIntake: 0, target: 3500, streak: 1 };
+  const prxData = duoData?.users?.prx || { todayIntake: 0, target: 3500, streak: 0 };
+  const sharzzData = duoData?.users?.sharzz || { todayIntake: 0, target: 3500, streak: 0 };
   const lastNudge = duoData?.lastNudge;
 
   const otherUser = currentUser === 'prx' ? 'sharzz' : 'prx';

@@ -11,7 +11,7 @@ export default function BottleCard({
   const avatar = userId === 'prx' ? '🌊' : '🌿';
   const intake = userData?.todayIntake || 0;
   const target = userData?.target || 3500;
-  const streak = userData?.streak || 1;
+  const streak = userData?.streak !== undefined ? userData.streak : 0;
   const lastTime = userData?.lastDrinkTime;
   const lastAmount = userData?.lastAmountLogged;
 

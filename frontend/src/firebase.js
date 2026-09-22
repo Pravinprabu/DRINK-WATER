@@ -44,7 +44,7 @@ export async function logWaterIntake(userId, amount) {
   const current = snapshot.val() || {
     todayIntake: 0,
     target: BASE_TARGET_ML,
-    streak: 1
+    streak: 0
   };
 
   const newTotal = Math.max(0, (current.todayIntake || 0) + amount);
@@ -111,8 +111,8 @@ export async function checkDailyReset() {
       updates[`users/${userKey}/lastDrinkTime`] = null;
       updates[`users/${userKey}/lastDrinkTimestamp`] = null;
       updates[`users/${userKey}/lastAmountLogged`] = null;
-      // If reached 3.5L goal before midnight, streak + 1, otherwise reset to 1
-      updates[`users/${userKey}/streak`] = reachedGoal ? ((u.streak || 1) + 1) : 1;
+      // Streak updates to +1 only if limit (3.5L) was reached; otherwise resets to 0
+      updates[`users/${userKey}/streak`] = reachedGoal ? ((u.streak || 0) + 1) : 0;
     });
 
     await update(ref(database), updates);
