@@ -64,9 +64,9 @@ function playSound(type = 'drop') {
 }
 
 export default function App() {
-  // Theme state: dark / light
+  // Theme state: default to 'light'
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('hydration_theme') || 'dark';
+    return localStorage.getItem('hydration_theme') || 'light';
   });
 
   // Session storage ensures secret PIN (0412 / 0808) is entered whenever opening the site
@@ -200,7 +200,11 @@ export default function App() {
 
       {/* 1. Identity Selection Modal with Secret PIN */}
       {!currentUser && (
-        <IdentityModal onSelectUser={handleSelectUser} />
+        <IdentityModal 
+          onSelectUser={handleSelectUser}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+        />
       )}
 
       {/* 2. Motivational GIF Celebration Modal when > 3.5L */}
